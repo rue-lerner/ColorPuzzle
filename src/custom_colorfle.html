@@ -412,7 +412,7 @@
   .palette-item {
     position: relative;
     display: grid;
-    grid-template-rows: 64px auto auto;
+    grid-template-rows: 64px auto;
     gap: 5px;
     min-width: 0;
   }
@@ -427,17 +427,6 @@
     cursor: pointer;
   }
 
-  .palette-item input[type="text"] {
-    width: 100%;
-    min-height: 30px;
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 0 6px;
-    background: #fff;
-    color: var(--ink);
-    font-size: 0.75rem;
-  }
-
   .palette-pick {
     width: 100%;
     min-height: 30px;
@@ -446,6 +435,10 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: 0.74rem;
+  }
+
+  .palette-pick::before {
+    content: "Use";
   }
 
   .palette-pick[aria-pressed="true"] {
@@ -596,7 +589,7 @@
       <aside aria-label="Palette settings">
         <section class="settings">
           <h2>Palette</h2>
-          <p>Edit colors here, then click palette tiles to fill the current recipe slots.</p>
+          <p>Click palette tiles to fill the current recipe slots. Editing colors starts a fresh setup and requires a new puzzle.</p>
           <div class="mode-control" id="modeControl" aria-label="Recipe length"></div>
           <div class="palette" id="palette"></div>
           <div class="settings-actions">
@@ -620,18 +613,18 @@
   const MIN_PALETTE_COLORS = 12;
   const STORAGE_KEY = "customColorflePalette";
   const DEFAULT_PALETTE = [
-    { name: "Tomato", hex: "#d94a3a" },
-    { name: "Marigold", hex: "#edae3f" },
-    { name: "Lemon", hex: "#f2dc5d" },
-    { name: "Leaf", hex: "#4f9d69" },
-    { name: "Teal", hex: "#2a9d8f" },
-    { name: "Sky", hex: "#55a6d9" },
-    { name: "Indigo", hex: "#4f5fbd" },
-    { name: "Berry", hex: "#a44c8f" },
-    { name: "Coral", hex: "#f07f5f" },
-    { name: "Mint", hex: "#8fd5a6" },
-    { name: "Cobalt", hex: "#2267ac" },
-    { name: "Plum", hex: "#6f3d82" }
+    "#d94a3a",
+    "#edae3f",
+    "#f2dc5d",
+    "#4f9d69",
+    "#2a9d8f",
+    "#55a6d9",
+    "#4f5fbd",
+    "#a44c8f",
+    "#f07f5f",
+    "#8fd5a6",
+    "#2267ac",
+    "#6f3d82"
   ];
 
   const state = {
@@ -640,7 +633,8 @@
     currentSlots: emptySlots(3),
     solution: [],
     guesses: [],
-    gameOver: false
+    gameOver: false,
+    editingPalette: false
   };
 
   const els = {
@@ -679,13 +673,11 @@
   }
 
   function normalizeColor(color) {
-    if (!color || typeof color.hex !== "string") return null;
-    const hex = color.hex.trim();
+    const rawHex = typeof color === "string" ? color : color && color.hex;
+    if (typeof rawHex !== "string") return null;
+    const hex = rawHex.trim();
     if (!/^#[0-9a-f]{6}$/i.test(hex)) return null;
-    return {
-      name: String(color.name || "Color").trim() || "Color",
-      hex: hex.toUpperCase()
-    };
+    return hex.toUpperCase();
   }
 
   function savePalette() {
@@ -724,7 +716,7 @@
   function mix(indices) {
     const rgb = { r: 0, g: 0, b: 0 };
     indices.forEach((paletteIndex, index) => {
-      const color = hexToRgb(state.palette[paletteIndex].hex);
+      const color = hexToRgb(state.palette[paletteIndex]);
       rgb.r += color.r * weights()[index];
       rgb.g += color.g * weights()[index];
       rgb.b += color.b * weights()[index];
@@ -759,6 +751,7 @@
     state.currentSlots = emptySlots();
     state.guesses = [];
     state.gameOver = false;
+    state.editingPalette = false;
     els.solutionRecipe.hidden = true;
     els.solutionRecipe.innerHTML = "";
     updateSlotCount();
@@ -798,43 +791,25 @@
 
   function renderPalette() {
     els.palette.innerHTML = "";
-    state.palette.forEach((color, index) => {
+    state.palette.forEach((hex, index) => {
       const row = document.createElement("div");
       row.className = "palette-item";
 
       const colorInput = document.createElement("input");
       colorInput.type = "color";
-      colorInput.value = color.hex;
-      colorInput.title = `${color.name} color`;
+      colorInput.value = hex;
+      colorInput.title = `Edit color ${index + 1}`;
       colorInput.addEventListener("input", () => {
-        state.palette[index].hex = colorInput.value.toUpperCase();
+        state.palette[index] = colorInput.value.toUpperCase();
         savePalette();
-        renderWheelSlots();
-        updateTarget();
-        renderBoard();
-        updateCurrentMix();
-      });
-
-      const nameInput = document.createElement("input");
-      nameInput.type = "text";
-      nameInput.value = color.name;
-      nameInput.ariaLabel = "Color name";
-      nameInput.addEventListener("input", () => {
-        state.palette[index].name = nameInput.value.trim() || "Color";
-        pick.textContent = state.palette[index].name;
-        pick.title = `Use ${state.palette[index].name}`;
-        savePalette();
-        renderWheelSlots();
-        renderBoard();
-        if (!els.solutionRecipe.hidden) showSolution();
+        enterPaletteEditMode();
       });
 
       const pick = document.createElement("button");
       pick.type = "button";
       pick.className = "palette-pick";
-      pick.textContent = color.name;
-      pick.title = `Use ${color.name}`;
-      pick.disabled = state.gameOver;
+      pick.title = `Use color ${index + 1}`;
+      pick.disabled = state.gameOver || state.editingPalette;
       pick.setAttribute("aria-pressed", String(state.currentSlots.includes(index)));
       pick.addEventListener("click", () => chooseColor(index));
 
@@ -847,11 +822,10 @@
       remove.addEventListener("click", () => {
         state.palette.splice(index, 1);
         savePalette();
-        renderPalette();
-        newPuzzle();
+        enterPaletteEditMode();
       });
 
-      row.append(colorInput, nameInput, pick, remove);
+      row.append(colorInput, pick, remove);
       els.palette.append(row);
     });
   }
@@ -864,14 +838,14 @@
       slot.className = "wheel-slot";
       if (paletteIndex !== null) {
         slot.classList.add("filled");
-        slot.style.setProperty("--slot-color", state.palette[paletteIndex].hex);
+        slot.style.setProperty("--slot-color", state.palette[paletteIndex]);
       }
 
       const clear = document.createElement("button");
       clear.type = "button";
-      clear.textContent = paletteIndex === null ? label : `${label} ${state.palette[paletteIndex].name}`;
+      clear.textContent = label;
       clear.title = paletteIndex === null ? `${label} slot` : `Clear ${label} slot`;
-      clear.disabled = state.gameOver;
+      clear.disabled = state.gameOver || state.editingPalette;
       clear.addEventListener("click", () => {
         state.currentSlots[slotIndex] = null;
         renderWheelSlots();
@@ -888,7 +862,7 @@
   }
 
   function chooseColor(paletteIndex) {
-    if (state.gameOver) return;
+    if (state.gameOver || state.editingPalette) return;
     const existingSlot = state.currentSlots.indexOf(paletteIndex);
     if (existingSlot >= 0) {
       state.currentSlots[existingSlot] = null;
@@ -902,6 +876,7 @@
   }
 
   function clearCurrentSlots() {
+    if (state.editingPalette) return;
     state.currentSlots = emptySlots();
     renderWheelSlots();
     renderPalette();
@@ -910,16 +885,16 @@
 
   function updateCurrentMix() {
     const guess = currentGuess();
-    const complete = guess.every((value) => value !== null);
+    const complete = !state.editingPalette && guess.every((value) => value !== null);
     const guessHex = complete ? mix(guess) : emptyMixHex();
-    const targetHex = mix(state.solution);
+    const targetHex = state.solution.length ? mix(state.solution) : emptyMixHex();
     const accuracy = complete ? colorAccuracy(guessHex, targetHex) : 0;
     els.mixHex.textContent = guessHex;
     els.mixPreview.textContent = complete ? `${accuracy}%` : "Mix";
     els.mixPreview.style.background = complete ? guessHex : "rgba(255, 255, 255, 0.88)";
     els.currentAccuracy.textContent = `${accuracy}%`;
     els.accuracyMeter.style.width = `${accuracy}%`;
-    els.guessButton.disabled = state.gameOver || !complete;
+    els.guessButton.disabled = state.gameOver || state.editingPalette || !complete;
   }
 
   function scoreGuess(guess) {
@@ -938,7 +913,7 @@
   }
 
   function submitGuess() {
-    if (state.gameOver) return;
+    if (state.gameOver || state.editingPalette) return;
     const guess = currentGuess();
     if (guess.some((value) => value === null)) {
       setStatus("Fill every slot.", `Click palette colors until all ${state.recipeLength} weighted slots are filled.`, 0);
@@ -997,10 +972,10 @@
         if (result) {
           const color = state.palette[result.guess[slotIndex]];
           cell.classList.add(result.feedback[slotIndex]);
-          cell.style.setProperty("--slot-color", color.hex);
-          const name = document.createElement("span");
-          name.textContent = color.name;
-          cell.append(name);
+          cell.style.setProperty("--slot-color", color);
+          const slotLabel = document.createElement("span");
+          slotLabel.textContent = weightLabels()[slotIndex];
+          cell.append(slotLabel);
         }
         row.append(cell);
       }
@@ -1020,15 +995,15 @@
     els.statusText.textContent = text;
     els.currentAccuracy.textContent = `${accuracy}%`;
     els.accuracyMeter.style.width = `${accuracy}%`;
-    els.guessButton.disabled = state.gameOver || state.currentSlots.some((value) => value === null);
-    els.clearGuessButton.disabled = state.gameOver;
+    els.guessButton.disabled = state.gameOver || state.editingPalette || state.currentSlots.some((value) => value === null);
+    els.clearGuessButton.disabled = state.gameOver || state.editingPalette;
     renderPalette();
     renderWheelSlots();
   }
 
   function reviewGuess(rowIndex) {
     const result = state.guesses[rowIndex];
-    if (!result) return;
+    if (!result || state.editingPalette) return;
     state.currentSlots = result.guess.slice();
     renderWheelSlots();
     renderPalette();
@@ -1044,32 +1019,47 @@
       const color = state.palette[paletteIndex];
       const pill = document.createElement("span");
       pill.className = "pill";
-      pill.textContent = `${weightLabels()[index]} ${color.name}`;
-      pill.style.borderColor = color.hex;
+      pill.textContent = weightLabels()[index];
+      pill.style.borderColor = color;
       els.solutionRecipe.append(pill);
     });
+  }
+
+  function enterPaletteEditMode() {
+    state.editingPalette = true;
+    state.gameOver = false;
+    state.solution = [];
+    state.currentSlots = emptySlots();
+    state.guesses = [];
+    els.solutionRecipe.hidden = true;
+    els.solutionRecipe.innerHTML = "";
+    els.targetSwatch.style.background = emptyMixHex();
+    els.attemptLabel.textContent = `0/${MAX_GUESSES}`;
+    renderWheelSlots();
+    renderPalette();
+    renderBoard();
+    updateCurrentMix();
+    setStatus("Start a new puzzle.", "The palette changed, so the previous target was cleared. Click New puzzle to generate a target from this palette.", 0);
   }
 
   els.guessButton.addEventListener("click", submitGuess);
   els.clearGuessButton.addEventListener("click", clearCurrentSlots);
   els.newPuzzleButton.addEventListener("click", newPuzzle);
   els.revealButton.addEventListener("click", () => {
+    if (state.editingPalette) return;
     state.gameOver = true;
     setStatus("Revealed.", "Here is the hidden recipe.", Number(els.currentAccuracy.textContent.replace("%", "")) || 0);
     showSolution();
   });
   els.addColorButton.addEventListener("click", () => {
-    state.palette.push({ name: `Color ${state.palette.length + 1}`, hex: "#808080" });
+    state.palette.push("#808080");
     savePalette();
-    renderPalette();
-    renderWheelSlots();
-    updateCurrentMix();
+    enterPaletteEditMode();
   });
   els.resetPaletteButton.addEventListener("click", () => {
     state.palette = DEFAULT_PALETTE.slice();
     savePalette();
-    renderPalette();
-    newPuzzle();
+    enterPaletteEditMode();
   });
 
   updateSlotCount();

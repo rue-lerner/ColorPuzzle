@@ -6,7 +6,7 @@ Inspired by Colorfle, a Wordle offshoot. This puzzle allows users to change the 
 
 Open `src/custom_colorfle.html` in a browser to play a customizable color-mixing puzzle.
 
-- Edit the 12-color base palette in the right panel.
+- Edit the 12-color base palette in the right panel. Palette edits clear the active target and require **New puzzle**.
 - Choose a 3, 4, 5, or 6-color recipe, then click **New puzzle**.
 - Click palette tiles to fill the weighted slots on the lower half of the wheel.
 - Click a previous guess number to recall that mix and compare its resulting color.
