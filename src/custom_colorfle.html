@@ -611,6 +611,7 @@
   };
   const MAX_GUESSES = 6;
   const MIN_PALETTE_COLORS = 12;
+  const PALETTE_STORAGE_VERSION = 2;
   const STORAGE_KEY = "customColorflePalette";
   const DEFAULT_PALETTE = [
     "#FFFFFF",
@@ -670,9 +671,14 @@
   function loadPalette() {
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      if (saved && saved.version === PALETTE_STORAGE_VERSION && Array.isArray(saved.colors)) {
+        const colors = saved.colors.map(normalizeColor).filter(Boolean);
+        if (colors.length >= MIN_PALETTE_COLORS) return colors;
+      }
+
       if (Array.isArray(saved)) {
         const colors = saved.map(normalizeColor).filter(Boolean);
-        if (colors.length >= MIN_PALETTE_COLORS) return colors;
+        if (colors.length >= DEFAULT_PALETTE.length) return colors;
       }
     } catch (error) {
       localStorage.removeItem(STORAGE_KEY);
@@ -689,7 +695,10 @@
   }
 
   function savePalette() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.palette));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      version: PALETTE_STORAGE_VERSION,
+      colors: state.palette
+    }));
   }
 
   function weights() {
