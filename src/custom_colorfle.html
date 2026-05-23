@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Custom Colorfle</title>
+<style>
+  :root {
+    --ink: #1e2528;
+    --muted: #667174;
+    --paper: #f7f3ec;
+    --panel: #ffffff;
+    --line: #d7d0c4;
+    --accent: #246b5c;
+    --accent-2: #b24f45;
+    --yellow: #c8a643;
+    --green: #3c8c62;
+    --gray: #a2aaa9;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+      linear-gradient(135deg, rgba(36, 107, 92, 0.12), transparent 34%),
+      linear-gradient(225deg, rgba(178, 79, 69, 0.14), transparent 36%),
+      var(--paper);
+    color: var(--ink);
+  }
+
+  button,
+  input,
+  select {
+    font: inherit;
+  }
+
+  button {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--ink);
+    min-height: 42px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+  }
+
+  button:hover {
+    border-color: var(--accent);
+    box-shadow: 0 4px 14px rgba(30, 37, 40, 0.08);
+  }
+
+  button:active {
+    transform: translateY(1px);
+  }
+
+  button:disabled {
+    color: var(--gray);
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .app {
+    width: min(1180px, calc(100vw - 28px));
+    margin: 0 auto;
+    padding: 24px 0 40px;
+  }
+
+  header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  h1,
+  h2,
+  h3,
+  p {
+    margin: 0;
+  }
+
+  h1 {
+    font-size: clamp(2.1rem, 6vw, 4.2rem);
+    line-height: 0.92;
+    letter-spacing: 0;
+  }
+
+  header p {
+    margin-top: 10px;
+    max-width: 620px;
+    color: var(--muted);
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: end;
+  }
+
+  .primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+    padding: 0 16px;
+  }
+
+  .secondary {
+    padding: 0 14px;
+  }
+
+  main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 24px;
+    margin-top: 24px;
+  }
+
+  .game {
+    min-width: 0;
+  }
+
+  .label {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
+    min-height: 24px;
+    color: var(--muted);
+    font-size: 0.84rem;
+    text-transform: uppercase;
+    letter-spacing: 0;
+  }
+
+  .status {
+    display: grid;
+    align-content: space-between;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.7);
+    padding: 14px;
+    min-height: 160px;
+  }
+
+  .status h2 {
+    font-size: clamp(1.35rem, 3vw, 2.15rem);
+    line-height: 1.05;
+  }
+
+  .status p {
+    color: var(--muted);
+    line-height: 1.45;
+    margin-top: 8px;
+  }
+
+  .wheel-area {
+    margin-top: 18px;
+    display: grid;
+    grid-template-columns: minmax(260px, 460px) minmax(0, 1fr);
+    gap: 18px;
+    align-items: center;
+  }
+
+  .wheel-shell {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+    padding: 12px;
+  }
+
+  .mix-wheel {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    border: 1px solid rgba(30, 37, 40, 0.24);
+    border-radius: 50%;
+    overflow: hidden;
+    background: #e8e2d7;
+    box-shadow: inset 0 0 0 8px rgba(255, 255, 255, 0.42);
+  }
+
+  .target-half {
+    position: absolute;
+    inset: 0 0 50% 0;
+    background: #bbb;
+    border-bottom: 1px solid rgba(30, 37, 40, 0.24);
+  }
+
+  .guess-half {
+    position: absolute;
+    inset: 50% 0 0 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .wheel-slot {
+    position: relative;
+    display: grid;
+    place-items: center;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.62);
+    border-right: 1px solid rgba(30, 37, 40, 0.18);
+    color: var(--muted);
+    text-align: center;
+    font-weight: 800;
+  }
+
+  .wheel-slot:last-child {
+    border-right: 0;
+  }
+
+  .wheel-slot.filled {
+    background: var(--slot-color);
+    color: rgba(30, 37, 40, 0.82);
+  }
+
+  .wheel-slot button {
+    width: 100%;
+    max-width: 120px;
+    min-height: 36px;
+    background: rgba(255, 255, 255, 0.78);
+    border-color: rgba(30, 37, 40, 0.16);
+    color: var(--ink);
+    padding: 0 8px;
+  }
+
+  .wheel-center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: rgba(255, 255, 255, 0.88);
+    border: 1px solid rgba(30, 37, 40, 0.22);
+    color: var(--muted);
+    font-weight: 900;
+    font-size: 0.8rem;
+    text-align: center;
+  }
+
+  .choice-panel {
+    min-width: 0;
+  }
+
+  .choice-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .choice {
+    min-height: 58px;
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    padding: 7px;
+    text-align: left;
+  }
+
+  .choice[aria-pressed="true"] {
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 2px rgba(36, 107, 92, 0.16);
+  }
+
+  .choice-swatch {
+    width: 24px;
+    height: 24px;
+    border: 1px solid rgba(30, 37, 40, 0.18);
+    border-radius: 50%;
+  }
+
+  .choice span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.84rem;
+  }
+
+  .actions {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    justify-content: end;
+    gap: 12px;
+    align-items: center;
+    margin-top: 14px;
+  }
+
+  .meter {
+    height: 12px;
+    background: rgba(30, 37, 40, 0.12);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .meter div {
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, var(--accent-2), var(--yellow), var(--green));
+    transition: width 180ms ease;
+  }
+
+  .board {
+    display: grid;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .guess-row {
+    display: grid;
+    grid-template-columns: 76px repeat(3, minmax(0, 1fr)) 92px;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .guess-number,
+  .guess-color,
+  .guess-accuracy {
+    min-height: 68px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.78);
+    border-radius: 8px;
+    display: grid;
+    align-items: center;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .guess-number {
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  .guess-color {
+    position: relative;
+    padding: 8px;
+    overflow: hidden;
+  }
+
+  .guess-color::before {
+    content: "";
+    width: 100%;
+    height: 24px;
+    border: 1px solid rgba(30, 37, 40, 0.16);
+    border-radius: 5px;
+    background: var(--slot-color, transparent);
+  }
+
+  .guess-color span {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ink);
+    font-size: 0.84rem;
+  }
+
+  .correct {
+    border-color: var(--green);
+    background: rgba(60, 140, 98, 0.2);
+  }
+
+  .misplaced {
+    border-color: var(--yellow);
+    background: rgba(200, 166, 67, 0.22);
+  }
+
+  .wrong {
+    border-color: var(--gray);
+    background: rgba(162, 170, 169, 0.16);
+  }
+
+  .guess-accuracy {
+    font-weight: 800;
+  }
+
+  aside {
+    min-width: 0;
+  }
+
+  .settings {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 14px;
+    position: sticky;
+    top: 14px;
+  }
+
+  .settings h2 {
+    font-size: 1.18rem;
+  }
+
+  .settings p {
+    color: var(--muted);
+    margin-top: 6px;
+    line-height: 1.45;
+  }
+
+  .palette {
+    display: grid;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .palette-item {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) 84px 38px;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .palette-item input[type="color"] {
+    width: 42px;
+    height: 42px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 2px;
+    background: #fff;
+  }
+
+  .palette-item input[type="text"] {
+    width: 100%;
+    min-height: 42px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0 10px;
+    background: #fff;
+    color: var(--ink);
+  }
+
+  .palette-item code {
+    color: var(--muted);
+    font-size: 0.78rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .icon-button {
+    width: 38px;
+    min-height: 38px;
+    display: grid;
+    place-items: center;
+    color: var(--accent-2);
+  }
+
+  .settings-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .hint {
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 0.86rem;
+    line-height: 1.45;
+  }
+
+  .recipe {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+
+  .pill {
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.84);
+    padding: 6px 9px;
+    color: var(--muted);
+    font-size: 0.84rem;
+  }
+
+  @media (max-width: 900px) {
+    header,
+    main,
+    .wheel-area {
+      grid-template-columns: 1fr;
+    }
+
+    .header-actions {
+      justify-content: start;
+    }
+
+    .settings {
+      position: static;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .app {
+      width: min(100vw - 18px, 1180px);
+      padding-top: 14px;
+    }
+
+    .guess-row {
+      grid-template-columns: 42px repeat(3, minmax(0, 1fr)) 58px;
+      gap: 5px;
+    }
+
+    .guess-number,
+    .guess-color,
+    .guess-accuracy {
+      min-height: 74px;
+      border-radius: 6px;
+    }
+
+    .guess-color span {
+      font-size: 0.72rem;
+      white-space: normal;
+      line-height: 1.1;
+    }
+
+    .palette-item {
+      grid-template-columns: 42px minmax(0, 1fr) 34px;
+    }
+
+    .palette-item code {
+      display: none;
+    }
+
+    .choice-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <h1>Custom Colorfle</h1>
+        <p>Pick a palette, start a puzzle, then find the hidden three-color recipe in six guesses.</p>
+      </div>
+      <div class="header-actions">
+        <button class="secondary" id="revealButton" type="button">Reveal</button>
+        <button class="primary" id="newPuzzleButton" type="button">New puzzle</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="game" aria-label="Puzzle">
+        <div class="wheel-area">
+          <div class="wheel-shell">
+            <div class="label"><span>Target and guess wheel</span><span id="attemptLabel">0/6</span></div>
+            <div class="mix-wheel" aria-label="Color mixing wheel">
+              <div class="target-half" id="targetSwatch"></div>
+              <div class="guess-half" id="wheelSlots"></div>
+              <div class="wheel-center">50 30 20</div>
+            </div>
+          </div>
+          <div class="status">
+            <div>
+              <h2 id="statusTitle">Make your first guess.</h2>
+              <p id="statusText">Click palette choices to fill the 50%, 30%, and 20% slots on the lower half of the wheel.</p>
+            </div>
+            <div>
+              <div class="label"><span>Current color accuracy</span><span id="currentAccuracy">0%</span></div>
+              <div class="meter" aria-hidden="true"><div id="accuracyMeter"></div></div>
+              <div class="recipe" id="solutionRecipe" hidden></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="choice-panel">
+          <div class="label"><span>Choices</span><span id="mixHex">#000000</span></div>
+          <div class="choice-grid" id="choices"></div>
+        </div>
+
+        <div class="actions">
+          <button class="secondary" id="clearGuessButton" type="button">Clear slots</button>
+          <button class="primary" id="guessButton" type="button">Guess</button>
+        </div>
+
+        <div class="board" id="board" aria-live="polite"></div>
+      </section>
+
+      <aside aria-label="Palette settings">
+        <section class="settings">
+          <h2>Palette</h2>
+          <p>Edit the colors and names, then start a new puzzle. The hidden recipe will be drawn from this 12-color base palette.</p>
+          <div class="palette" id="palette"></div>
+          <div class="settings-actions">
+            <button class="secondary" id="addColorButton" type="button">Add color</button>
+            <button class="secondary" id="resetPaletteButton" type="button">Reset palette</button>
+          </div>
+          <p class="hint">Keep at least 12 colors. Changes are saved in this browser.</p>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+<script>
+  const WEIGHTS = [0.5, 0.3, 0.2];
+  const WEIGHT_LABELS = ["50%", "30%", "20%"];
+  const MAX_GUESSES = 6;
+  const MIN_PALETTE_COLORS = 12;
+  const STORAGE_KEY = "customColorflePalette";
+  const DEFAULT_PALETTE = [
+    { name: "Tomato", hex: "#d94a3a" },
+    { name: "Marigold", hex: "#edae3f" },
+    { name: "Lemon", hex: "#f2dc5d" },
+    { name: "Leaf", hex: "#4f9d69" },
+    { name: "Teal", hex: "#2a9d8f" },
+    { name: "Sky", hex: "#55a6d9" },
+    { name: "Indigo", hex: "#4f5fbd" },
+    { name: "Berry", hex: "#a44c8f" },
+    { name: "Coral", hex: "#f07f5f" },
+    { name: "Mint", hex: "#8fd5a6" },
+    { name: "Cobalt", hex: "#2267ac" },
+    { name: "Plum", hex: "#6f3d82" }
+  ];
+
+  const state = {
+    palette: loadPalette(),
+    currentSlots: [null, null, null],
+    solution: [],
+    guesses: [],
+    gameOver: false
+  };
+
+  const els = {
+    palette: document.getElementById("palette"),
+    choices: document.getElementById("choices"),
+    wheelSlots: document.getElementById("wheelSlots"),
+    board: document.getElementById("board"),
+    targetSwatch: document.getElementById("targetSwatch"),
+    mixHex: document.getElementById("mixHex"),
+    guessButton: document.getElementById("guessButton"),
+    clearGuessButton: document.getElementById("clearGuessButton"),
+    newPuzzleButton: document.getElementById("newPuzzleButton"),
+    revealButton: document.getElementById("revealButton"),
+    addColorButton: document.getElementById("addColorButton"),
+    resetPaletteButton: document.getElementById("resetPaletteButton"),
+    statusTitle: document.getElementById("statusTitle"),
+    statusText: document.getElementById("statusText"),
+    attemptLabel: document.getElementById("attemptLabel"),
+    currentAccuracy: document.getElementById("currentAccuracy"),
+    accuracyMeter: document.getElementById("accuracyMeter"),
+    solutionRecipe: document.getElementById("solutionRecipe")
+  };
+
+  function loadPalette() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      if (Array.isArray(saved)) {
+        const colors = saved.map(normalizeColor).filter(Boolean);
+        if (colors.length >= MIN_PALETTE_COLORS) return colors;
+      }
+    } catch (error) {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+    return DEFAULT_PALETTE.slice();
+  }
+
+  function normalizeColor(color) {
+    if (!color || typeof color.hex !== "string") return null;
+    const hex = color.hex.trim();
+    if (!/^#[0-9a-f]{6}$/i.test(hex)) return null;
+    return {
+      name: String(color.name || "Color").trim() || "Color",
+      hex: hex.toUpperCase()
+    };
+  }
+
+  function savePalette() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.palette));
+  }
+
+  function hexToRgb(hex) {
+    const value = hex.replace("#", "");
+    return {
+      r: parseInt(value.slice(0, 2), 16),
+      g: parseInt(value.slice(2, 4), 16),
+      b: parseInt(value.slice(4, 6), 16)
+    };
+  }
+
+  function rgbToHex(rgb) {
+    return ["r", "g", "b"]
+      .map((channel) => Math.round(rgb[channel]).toString(16).padStart(2, "0"))
+      .join("")
+      .toUpperCase()
+      .replace(/^/, "#");
+  }
+
+  function mix(indices) {
+    const rgb = { r: 0, g: 0, b: 0 };
+    indices.forEach((paletteIndex, index) => {
+      const color = hexToRgb(state.palette[paletteIndex].hex);
+      rgb.r += color.r * WEIGHTS[index];
+      rgb.g += color.g * WEIGHTS[index];
+      rgb.b += color.b * WEIGHTS[index];
+    });
+    return rgbToHex(rgb);
+  }
+
+  function emptyMixHex() {
+    return "#E8E2D7";
+  }
+
+  function colorAccuracy(hexA, hexB) {
+    const a = hexToRgb(hexA);
+    const b = hexToRgb(hexB);
+    const distance = Math.hypot(a.r - b.r, a.g - b.g, a.b - b.b);
+    const maxDistance = Math.hypot(255, 255, 255);
+    return Math.max(0, Math.round((1 - distance / maxDistance) * 100));
+  }
+
+  function shuffledIndices(length) {
+    const indices = Array.from({ length }, (_, index) => index);
+    for (let i = indices.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    return indices;
+  }
+
+  function newPuzzle() {
+    if (state.palette.length < MIN_PALETTE_COLORS) return;
+    state.solution = shuffledIndices(state.palette.length).slice(0, 3);
+    state.currentSlots = [null, null, null];
+    state.guesses = [];
+    state.gameOver = false;
+    els.solutionRecipe.hidden = true;
+    els.solutionRecipe.innerHTML = "";
+    updateTarget();
+    renderWheelSlots();
+    renderChoices();
+    renderBoard();
+    updateCurrentMix();
+    setStatus("Make your first guess.", "Click palette choices to fill the 50%, 30%, and 20% slots on the lower half of the wheel.", 0);
+  }
+
+  function updateTarget() {
+    els.targetSwatch.style.background = mix(state.solution);
+    els.attemptLabel.textContent = `${state.guesses.length}/${MAX_GUESSES}`;
+  }
+
+  function renderPalette() {
+    els.palette.innerHTML = "";
+    state.palette.forEach((color, index) => {
+      const row = document.createElement("div");
+      row.className = "palette-item";
+
+      const colorInput = document.createElement("input");
+      colorInput.type = "color";
+      colorInput.value = color.hex;
+      colorInput.title = `${color.name} color`;
+      colorInput.addEventListener("input", () => {
+        state.palette[index].hex = colorInput.value.toUpperCase();
+        savePalette();
+        renderPalette();
+        renderWheelSlots();
+        renderChoices();
+        updateTarget();
+        renderBoard();
+        updateCurrentMix();
+      });
+
+      const nameInput = document.createElement("input");
+      nameInput.type = "text";
+      nameInput.value = color.name;
+      nameInput.ariaLabel = "Color name";
+      nameInput.addEventListener("input", () => {
+        state.palette[index].name = nameInput.value.trim() || "Color";
+        savePalette();
+        renderWheelSlots();
+        renderChoices();
+        renderBoard();
+        if (!els.solutionRecipe.hidden) showSolution();
+      });
+
+      const hex = document.createElement("code");
+      hex.textContent = color.hex;
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "icon-button";
+      remove.textContent = "x";
+      remove.title = "Remove color";
+      remove.disabled = state.palette.length <= MIN_PALETTE_COLORS;
+      remove.addEventListener("click", () => {
+        state.palette.splice(index, 1);
+        savePalette();
+        renderPalette();
+        newPuzzle();
+      });
+
+      row.append(colorInput, nameInput, hex, remove);
+      els.palette.append(row);
+    });
+  }
+
+  function renderWheelSlots() {
+    els.wheelSlots.innerHTML = "";
+    WEIGHT_LABELS.forEach((label, slotIndex) => {
+      const paletteIndex = state.currentSlots[slotIndex];
+      const slot = document.createElement("div");
+      slot.className = "wheel-slot";
+      if (paletteIndex !== null) {
+        slot.classList.add("filled");
+        slot.style.setProperty("--slot-color", state.palette[paletteIndex].hex);
+      }
+
+      const clear = document.createElement("button");
+      clear.type = "button";
+      clear.textContent = paletteIndex === null ? label : `${label} ${state.palette[paletteIndex].name}`;
+      clear.title = paletteIndex === null ? `${label} slot` : `Clear ${label} slot`;
+      clear.disabled = state.gameOver;
+      clear.addEventListener("click", () => {
+        state.currentSlots[slotIndex] = null;
+        renderWheelSlots();
+        renderChoices();
+        updateCurrentMix();
+      });
+      slot.append(clear);
+      els.wheelSlots.append(slot);
+    });
+  }
+
+  function currentGuess() {
+    return state.currentSlots.slice();
+  }
+
+  function renderChoices() {
+    els.choices.innerHTML = "";
+    state.palette.forEach((color, paletteIndex) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "choice";
+      button.disabled = state.gameOver;
+      button.setAttribute("aria-pressed", String(state.currentSlots.includes(paletteIndex)));
+
+      const swatch = document.createElement("span");
+      swatch.className = "choice-swatch";
+      swatch.style.background = color.hex;
+
+      const name = document.createElement("span");
+      name.textContent = color.name;
+
+      button.append(swatch, name);
+      button.addEventListener("click", () => chooseColor(paletteIndex));
+      els.choices.append(button);
+    });
+  }
+
+  function chooseColor(paletteIndex) {
+    if (state.gameOver) return;
+    const existingSlot = state.currentSlots.indexOf(paletteIndex);
+    if (existingSlot >= 0) {
+      state.currentSlots[existingSlot] = null;
+    } else {
+      const emptySlot = state.currentSlots.findIndex((value) => value === null);
+      state.currentSlots[emptySlot >= 0 ? emptySlot : 0] = paletteIndex;
+    }
+    renderWheelSlots();
+    renderChoices();
+    updateCurrentMix();
+  }
+
+  function clearCurrentSlots() {
+    state.currentSlots = [null, null, null];
+    renderWheelSlots();
+    renderChoices();
+    updateCurrentMix();
+  }
+
+  function updateCurrentMix() {
+    const guess = currentGuess();
+    const complete = guess.every((value) => value !== null);
+    const guessHex = complete ? mix(guess) : emptyMixHex();
+    const targetHex = mix(state.solution);
+    const accuracy = complete ? colorAccuracy(guessHex, targetHex) : 0;
+    els.mixHex.textContent = guessHex;
+    els.currentAccuracy.textContent = `${accuracy}%`;
+    els.accuracyMeter.style.width = `${accuracy}%`;
+    els.guessButton.disabled = state.gameOver || !complete;
+  }
+
+  function scoreGuess(guess) {
+    const feedback = guess.map((value, index) => {
+      if (value === state.solution[index]) return "correct";
+      if (state.solution.includes(value)) return "misplaced";
+      return "wrong";
+    });
+    const guessHex = mix(guess);
+    return {
+      guess,
+      feedback,
+      hex: guessHex,
+      accuracy: colorAccuracy(guessHex, mix(state.solution))
+    };
+  }
+
+  function submitGuess() {
+    if (state.gameOver) return;
+    const guess = currentGuess();
+    if (guess.some((value) => value === null)) {
+      setStatus("Fill all three slots.", "Click palette choices until the lower half of the wheel has a 50%, 30%, and 20% color.", 0);
+      return;
+    }
+    if (new Set(guess).size !== guess.length) {
+      setStatus("Use three different colors.", "The hidden recipe never repeats a color, so each guess should use three unique palette colors.", Number(els.currentAccuracy.textContent.replace("%", "")));
+      return;
+    }
+
+    const result = scoreGuess(guess);
+    state.guesses.push(result);
+    state.currentSlots = [null, null, null];
+    renderBoard();
+    updateTarget();
+    renderWheelSlots();
+    renderChoices();
+    updateCurrentMix();
+
+    const won = result.feedback.every((value) => value === "correct");
+    const outOfGuesses = state.guesses.length >= MAX_GUESSES;
+    if (won) {
+      state.gameOver = true;
+      setStatus("Solved.", `You found the recipe in ${state.guesses.length} ${state.guesses.length === 1 ? "try" : "tries"}.`, result.accuracy);
+      showSolution();
+    } else if (outOfGuesses) {
+      state.gameOver = true;
+      setStatus("Puzzle complete.", "That was the sixth guess. The recipe is below.", result.accuracy);
+      showSolution();
+    } else {
+      setStatus("Guess recorded.", `${MAX_GUESSES - state.guesses.length} guesses left. Green is exact, yellow belongs in another slot.`, result.accuracy);
+    }
+  }
+
+  function renderBoard() {
+    els.board.innerHTML = "";
+    for (let rowIndex = 0; rowIndex < MAX_GUESSES; rowIndex += 1) {
+      const row = document.createElement("div");
+      row.className = "guess-row";
+
+      const number = document.createElement("div");
+      number.className = "guess-number";
+      number.textContent = String(rowIndex + 1);
+      row.append(number);
+
+      const result = state.guesses[rowIndex];
+      for (let slotIndex = 0; slotIndex < 3; slotIndex += 1) {
+        const cell = document.createElement("div");
+        cell.className = "guess-color";
+        if (result) {
+          const color = state.palette[result.guess[slotIndex]];
+          cell.classList.add(result.feedback[slotIndex]);
+          cell.style.setProperty("--slot-color", color.hex);
+          const name = document.createElement("span");
+          name.textContent = color.name;
+          cell.append(name);
+        }
+        row.append(cell);
+      }
+
+      const accuracy = document.createElement("div");
+      accuracy.className = "guess-accuracy";
+      accuracy.textContent = result ? `${result.accuracy}%` : "";
+      if (result) accuracy.style.background = result.hex;
+      row.append(accuracy);
+
+      els.board.append(row);
+    }
+  }
+
+  function setStatus(title, text, accuracy) {
+    els.statusTitle.textContent = title;
+    els.statusText.textContent = text;
+    els.currentAccuracy.textContent = `${accuracy}%`;
+    els.accuracyMeter.style.width = `${accuracy}%`;
+    els.guessButton.disabled = state.gameOver || state.currentSlots.some((value) => value === null);
+    els.clearGuessButton.disabled = state.gameOver;
+    renderChoices();
+    renderWheelSlots();
+  }
+
+  function showSolution() {
+    els.solutionRecipe.hidden = false;
+    els.solutionRecipe.innerHTML = "";
+    state.solution.forEach((paletteIndex, index) => {
+      const color = state.palette[paletteIndex];
+      const pill = document.createElement("span");
+      pill.className = "pill";
+      pill.textContent = `${WEIGHT_LABELS[index]} ${color.name}`;
+      pill.style.borderColor = color.hex;
+      els.solutionRecipe.append(pill);
+    });
+  }
+
+  els.guessButton.addEventListener("click", submitGuess);
+  els.clearGuessButton.addEventListener("click", clearCurrentSlots);
+  els.newPuzzleButton.addEventListener("click", newPuzzle);
+  els.revealButton.addEventListener("click", () => {
+    state.gameOver = true;
+    setStatus("Revealed.", "Here is the hidden recipe.", Number(els.currentAccuracy.textContent.replace("%", "")) || 0);
+    showSolution();
+  });
+  els.addColorButton.addEventListener("click", () => {
+    state.palette.push({ name: `Color ${state.palette.length + 1}`, hex: "#808080" });
+    savePalette();
+    renderPalette();
+    renderWheelSlots();
+    renderChoices();
+    updateCurrentMix();
+  });
+  els.resetPaletteButton.addEventListener("click", () => {
+    state.palette = DEFAULT_PALETTE.slice();
+    savePalette();
+    renderPalette();
+    newPuzzle();
+  });
+
+  renderPalette();
+  newPuzzle();
+</script>
+</body>
+</html>

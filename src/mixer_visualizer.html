@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>RGB Visualizer</title>
+<style>
+#colorBox {
+  width: 200px;
+  height: 200px;
+  border: 1px solid black;
+}
+</style>
+</head>
+<body>
+
+
+  Color1Red: <input type="range" min="0" max="255" id="c1r" value ="0"><span  id="color1redvalue"></span><br>
+
+  Color1Green: <input type="range" id ="c1g" min="0" max="255" value="0"><span id="color1greenvalue">0</span><br>
+
+  Color1Blue: <input type="range" id ="c1b" min="0" max="255" value="0"><span id="color1bluevalue">0</span><br>
+
+
+
+
+  <div id = "ing1Box">
+
+  </div>
+
+
+
+  Color2Red: <input type="range" id="c2r" min="0" max="255" value ="0"><span id="color1redvalue">0</span><br>
+
+  Color2Green: <input type="range" id ="c2g"  min="0" max="255" value="0"><span id="color2greenvalue">0</span><br>
+
+  Color2Blue: <input type="range" id ="c2b" min="0" max="255" value="0"><span id="color2bluevalue">0</span><br>
+
+  <div id = "ing2Box">
+
+  </div><br>
+
+
+
+
+  <div id = "colorBox">
+
+  </div>
+
+
+
+
+  <script>
+    
+    const c1rsldr = document.getElementById('c1r');
+    const c1gsldr = document.getElementById('c1g');
+    const c1bsldr= document.getElementById('c1b');
+
+    const c2rsldr = document.getElementById('c2r')
+    const c2gsldr = document.getElementById('c2g')
+    const c2bsldr = document.getElementById('c2b')
+
+    const c1red = document.getElementbyId('color1redvalue')
+    const c1green = document.getElementbyId('color1greenvalue')
+    const c1blue = document.getElementbyId('color1bluevalue')
+
+    const c2red = document.getElementbyId('color2redvalue')
+    const c2green =  document.getElementbyId('color2greenvalue')
+    const c2blue = document.getElementbyId('color2bluevalue')
+
+
+    function updateColor() {
+
+
+      const red = (c1red.value + c2red.value) / 2
+      const green = (c1green.value + c2green.value) / 2
+      const blue = (c1blue.value + c2blue.value) / 2
+
+      c1red.textcontent = 'Color2Red: '
+      ing1Box.style.backgroundColor =`rgb(${c1red}, ${c1green}, ${c1blue})`;
+      ing2Box.style.backgroundColor =`rgb(${c2red}, ${c2green}, ${c2blue})`; 
+      colorBox.style.backgroundColor = `rgb(${red}, ${green}, ${blue})`;
+    }
+
+    c1red.addEventListener('input', updateColor);
+    c1green.addEventListener('input', updateColor);
+    c1blue.addEventListener('input', updateColor);
+
+    c2red.addEventListener('input', updateColor);
+    c2green.addEventListener('input', updateColor);
+    c2blue.addEventListener('input', updateColor);
+
+    updateColor();
+
+
+  </script>
+
+  
+
+</body>
+</html>
