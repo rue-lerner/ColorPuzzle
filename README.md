@@ -1,3 +1,7 @@
+# ColorPuzzle
+
+Inspired by Colorfle, a Wordle offshoot. This puzzle allows users to change the puzzle's palette and other parameters.
+
 ## Custom Colorfle
 
 Open `src/custom_colorfle.html` in a browser to play a customizable color-mixing puzzle.
