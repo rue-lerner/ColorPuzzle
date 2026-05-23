@@ -802,7 +802,7 @@
       colorInput.addEventListener("input", () => {
         state.palette[index] = colorInput.value.toUpperCase();
         savePalette();
-        enterPaletteEditMode();
+        enterPaletteEditMode({ renderPalette: false });
       });
 
       const pick = document.createElement("button");
@@ -1025,7 +1025,7 @@
     });
   }
 
-  function enterPaletteEditMode() {
+  function enterPaletteEditMode({ renderPalette = true } = {}) {
     state.editingPalette = true;
     state.gameOver = false;
     state.solution = [];
@@ -1036,10 +1036,15 @@
     els.targetSwatch.style.background = emptyMixHex();
     els.attemptLabel.textContent = `0/${MAX_GUESSES}`;
     renderWheelSlots();
-    renderPalette();
+    if (renderPalette) renderPalette();
     renderBoard();
     updateCurrentMix();
-    setStatus("Start a new puzzle.", "The palette changed, so the previous target was cleared. Click New puzzle to generate a target from this palette.", 0);
+    els.statusTitle.textContent = "Start a new puzzle.";
+    els.statusText.textContent = "The palette changed, so the previous target was cleared. Click New puzzle to generate a target from this palette.";
+    els.currentAccuracy.textContent = "0%";
+    els.accuracyMeter.style.width = "0%";
+    els.guessButton.disabled = true;
+    els.clearGuessButton.disabled = true;
   }
 
   els.guessButton.addEventListener("click", submitGuess);
